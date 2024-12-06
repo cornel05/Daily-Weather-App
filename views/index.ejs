@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather App</title>
+    <link rel="stylesheet" href="/styles/style.css" />
+  </head>
+  <body>
+    <div class="weather-app">
+      <header>
+        <h1>Weather App</h1>
+        <div class="search-bar">
+          <form method="POST" action="/getCity">
+            <input
+              type="text"
+              placeholder="Select cities..."
+              id="city-input"
+              name="city"
+            />
+            <button type="submit" id="add-city">🔎</button>
+          </form>
+        </div>
+      </header>
+      <section class="weather-icons">
+        <span class="icon-sun">☀️</span>
+        <span class="icon-cloud">☁️</span>
+        <span class="icon-rain">🌧️</span>
+        <span class="icon-wind">💨</span>
+      </section>
+      <section class="weather-forecast" id="weather-forecast">
+        <% forecasts.forEach((forecast, index) => { %>
+        <div class="forecast-card animate-card" data-index="<%= index %>">
+          <button class="remove-btn" onclick="removeForecast(<%= index %>)">
+            x
+          </button>
+          <h2><%= forecast.city %></h2>
+          <p class="temperature"><%= forecast.temperature %>°</p>
+          <p class="icon"><%= forecast.icon %></p>
+          <div class="details">
+            <p>Feels like: <%= forecast.feels_like %>°</p>
+            <p>Wind: <%= forecast.wind %> km/h</p>
+            <p>Humidity: <%= forecast.humidity %>%</p>
+          </div>
+        </div>
+        <% }); %>
+      </section>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
