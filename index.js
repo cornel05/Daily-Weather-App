@@ -1,6 +1,8 @@
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
+import ejs from "ejs";
+import path from "path";
 
 const app = express();
 const PORT = 3000;
@@ -19,6 +21,10 @@ function icon(temperature) {
 
 app.use(express.static("public")); // Serve static CSS and JS files
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.set("view engine", "ejs");
+app.engine("ejs", ejs.__express); // Add this line to set the templating engine
+app.set("views", path.join(__dirname, "./views")); // Assuming 'views' is in same level as root folder
 
 async function getCoordinates(city) {
   try {
