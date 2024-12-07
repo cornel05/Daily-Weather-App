@@ -3,10 +3,13 @@ import axios from "axios";
 import bodyParser from "body-parser";
 import ejs from "ejs";
 import path from "path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 const PORT = 3000;
 const API_KEY = "789e511e2f355df6117224d8101331b3";
+const __dirname = dirname(fileURLToPath(import.meta.url));
 var forecasts = [];
 
 function icon(temperature) {
