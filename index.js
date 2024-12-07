@@ -22,7 +22,7 @@ function icon(temperature) {
   }
 }
 
-app.use(express.static("public")); // Serve static CSS and JS files
+app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.set("view engine", "ejs");
