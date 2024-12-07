@@ -1,11 +1,10 @@
 import express from "express";
 import axios from "axios";
 import bodyParser from "body-parser";
-import e from "express";
 
 const app = express();
 const PORT = 3000;
-const API_KEY = "s7YSFSBvBJqHipYgcp8DYwA4rLkd1PGn";
+const API_KEY = "789e511e2f355df6117224d8101331b3";
 var forecasts = [];
 
 function icon(temperature) {
@@ -19,7 +18,18 @@ function icon(temperature) {
 }
 
 app.use(express.static("public")); // Serve static CSS and JS files
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+async function getCoordinates(city) {
+  try {
+    const response = await axios.get(
+      `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=5&appid=${API_KEY}`
+    );
+    return [response.data[0].lat, response.data[0].lon];
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 app.get("/", (req, res) => {
   //     {
@@ -51,34 +61,45 @@ app.get("/", (req, res) => {
 });
 
 app.post("/getCity", async (req, res) => {
+  const city = req.body.city;
+  const [lad, lon] = await getCoordinates(city);
+  const today = new Date();
+
   try {
-    const cityResponse = await axios.get(
-      `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${API_KEY}&q=${req.body.city}`
-    );
-    const cityKey = cityResponse.data[0].Key;
+    const response = await axios.get(`https://api.open-meteo.com/v1/forecast`, {
+      params: {
+        latitude: lad,
+        longitude: lon,
+        current: [
+          "temperature_2m",
+          "apparent_temperature",
+          "weather_code",
+          "relative_humidity_2m",
+          "windspeed_10m",
+        ],
+        temperature_unit: "celsius",
+        start_date: today.toISOString().split("T")[0],
+        end_date: today.toISOString().split("T")[0],
+        timezone: "Asia/Ho_Chi_Minh",
+      },
+    });
 
-    const forecastDailyResponse = await axios.get(
-      `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${cityKey}?apikey=${API_KEY}&details=true`
-    );
-    const forecastDaily = forecastDailyResponse.data.DailyForecasts[0];
-    const currentConditionsResponse = await axios.get(
-      `http://dataservice.accuweather.com/currentconditions/v1/${cityKey}?apikey=${API_KEY}&details=true`
-    );
-    const currentConditions = currentConditionsResponse.data[0];
-    const currentForecast = {
-      city: req.body.city,
-      temperature: currentConditions.Temperature.Metric.Value,
-      feels_like: currentConditions.RealFeelTemperature.Maximum.Value,
-      wind: currentConditions.Wind.Speed.Imperial.Value,
-      humidity: currentConditions.RelativeHumidity,
-      icon: currentConditions.WeatherIcon,
+    console.log(response.data.current);
+
+    const forecast = {
+      city: city,
+      temperature: response.data.current.temperature_2m,
+      feels_like: response.data.current.apparent_temperature,
+      wind: response.data.current.windspeed_10m,
+      humidity: response.data.current.relative_humidity_2m,
+      icon: icon(response.data.current.temperature_2m),
     };
-    console.log(currentForecast);
-    forecasts.push(currentForecast);
-    res.render("index.ejs", { forecasts });
 
+    forecasts.push(forecast);
+    res.render("index.ejs", { forecasts: forecasts });
   } catch (error) {
-    res.status(503).send(error.response.data.Message);
+    console.error("Error fetching data:", error);
+    res.status(500).send("Error fetching data");
   }
 });
 
